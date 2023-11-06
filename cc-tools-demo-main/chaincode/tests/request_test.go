@@ -152,18 +152,18 @@ func theFieldShouldHaveSize(ctx context.Context, field string, expectedSize int)
 	return ctx, nil
 }
 
-func thereAreBikesWithPrefixByAuthor(ctx context.Context, nBikes int, prefix string, author string) (context.Context, error) {
+func thereAreBooksWithPrefixByAuthor(ctx context.Context, nBooks int, prefix string, author string) (context.Context, error) {
 	var res *http.Response
 	var err error
 
 	for i := 1; i <= nBooks; i++ {
-		// Verify if bike already exists
+		// Verify if book already exists
 		requestJSON := map[string]interface{}{
 			"query": map[string]interface{}{
 				"selector": map[string]interface{}{
-					"Owner":     Owner,
-					"Name":      prefix + strconv.Itoa(i),
-					"@assetType": "bike",
+					"author":     author,
+					"title":      prefix + strconv.Itoa(i),
+					"@assetType": "book",
 				},
 			},
 			"resolve": true,
@@ -188,14 +188,14 @@ func thereAreBikesWithPrefixByAuthor(ctx context.Context, nBikes int, prefix str
 			return ctx, err
 		}
 
-		// Create bike if it doesnt exists
+		// Create book if it doesnt exists
 		if len(received["result"].([]interface{})) == 0 {
 			requestJSON := map[string]interface{}{
 				"asset": []interface{}{
 					map[string]interface{}{
-						"Owner":     Owner,
-						"Name":      prefix + strconv.Itoa(i),
-						"@assetType": "bike",
+						"author":     author,
+						"title":      prefix + strconv.Itoa(i),
+						"@assetType": "book",
 					},
 				},
 			}
@@ -218,16 +218,16 @@ func thereAreBikesWithPrefixByAuthor(ctx context.Context, nBikes int, prefix str
 	return ctx, nil
 }
 
-func thereIsAStationWithName(ctx context.Context, name string) (context.Context, error) {
+func thereIsALibraryWithName(ctx context.Context, name string) (context.Context, error) {
 	var res *http.Response
 	var err error
 
-	// Verify if station already exists
+	// Verify if library already exists
 	requestJSON := map[string]interface{}{
 		"query": map[string]interface{}{
 			"selector": map[string]interface{}{
 				"name":       name,
-				"@assetType": "station"
+				"@assetType": "library",
 			},
 		},
 		"resolve": true,
@@ -252,13 +252,13 @@ func thereIsAStationWithName(ctx context.Context, name string) (context.Context,
 		return ctx, err
 	}
 
-	// Create station if it doesnt exists
+	// Create library if it doesnt exists
 	if len(received["result"].([]interface{})) == 0 {
 		requestJSON = map[string]interface{}{
 			"asset": []interface{}{
 				map[string]interface{}{
 					"name":       name,
-					"@assetType": "station",
+					"@assetType": "library",
 				},
 			},
 		}
@@ -329,9 +329,9 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the response should have:$`, theResponseShouldHave)
 	ctx.Step(`^there is a running "([^"]*)" test network$`, thereIsARunningTestNetwork)
 	ctx.Step(`^there is a running "([^"]*)" test network from scratch$`, thereIsARunningTestNetworkFromScratch)
-	ctx.Step(`^there are (\d+) bikes with prefix "([^"]*)" by author "([^"]*)"$`, thereAreBikesWithPrefixByAuthor)
+	ctx.Step(`^there are (\d+) books with prefix "([^"]*)" by author "([^"]*)"$`, thereAreBooksWithPrefixByAuthor)
 	ctx.Step(`^the "([^"]*)" field should have size (\d+)$`, theFieldShouldHaveSize)
-	ctx.Step(`^there is a station with name "([^"]*)"$`, thereIsAStationWithName)
+	ctx.Step(`^there is a library with name "([^"]*)"$`, thereIsALibraryWithName)
 }
 
 func waitForNetwork(port string) error {
@@ -374,6 +374,9 @@ func verifyContainer(container string, port string) bool {
 		return false
 	}
 
+	// If ccapi is the expected container, continue
+	return outb.String() == "{\""+port+"/tcp\":{}}\n"
+}
 	// If ccapi is the expected container, continue
 	return outb.String() == "{\""+port+"/tcp\":{}}\n"
 }
